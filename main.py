@@ -8,9 +8,8 @@ __date__ = "$16-Mar-2010 16:35:49$"
 import sys
 from PyQt4 import QtCore, QtGui
 
-from tunnelchat import TunnelChat
+from tunnelconnection import TunnelConnection
 from chatrosterwindow import ChatRosterWindow
-
 from loginwindow import LoginWindow
 
 class TunnelClient(object):
@@ -19,9 +18,8 @@ class TunnelClient(object):
     def __init__(self):
         """Initialise objects"""
         self.connected = False
- 
-        self.app = QtGui.QApplication(sys.argv)
 
+        self.app = QtGui.QApplication(sys.argv)
         self.chat = ChatRosterWindow(self)
 
         self.login()
@@ -44,16 +42,15 @@ class TunnelClient(object):
 
     def start_connection(self):
         # Initialise the XMPP connection
-        try:
-            self.xmpp = TunnelChat(str(self.username) + "/tunnel",
-                    str(self.password), self.chat)
-            self.xmpp.connect((str(self.server), 5222))
-            self.xmpp.process(threaded=True)
-        except:
-            return False
-        else:
-            return True
-
-
+        #try:
+        self.xmpp = TunnelConnection(str(self.username) + "/tunnel",
+                str(self.password), self.chat.session_start,
+                self.chat.incoming_message)
+        self.xmpp.connect((str(self.server), 5222))
+        self.xmpp.process(threaded=True)
+        #except:
+        #    return False
+        #else:
+        return True
 
 TunnelClient()

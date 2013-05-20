@@ -37,9 +37,8 @@ class ChatRosterWindow(QtGui.QDialog):
         QtCore.QObject.connect(self.ui.lstRoster, \
             QtCore.SIGNAL("itemClicked(QListWidgetItem*)"), self.__activate_roster_item)
         QtCore.QObject.connect(self.roster_timer, QtCore.SIGNAL("timeout()"),
-        self.update_roster)
+            self.trigger_roster_update)
 
-        self.roster_timer.start(6800)
 
     def __activate_roster_item(self, item):
         """This will open the chat window"""
@@ -50,10 +49,8 @@ class ChatRosterWindow(QtGui.QDialog):
             self.open_chat_window(str(item.text()))
 
     def session_start(self, event):
-        self.parent.xmpp.getRoster()
-        self.parent.xmpp.sendPresence()
-
-        self.update_roster()
+        self.parent.xmpp.add_event_handler("roster_update", self.roster_update)
+        self.trigger_roster_update()
         self.ui.lblStatus.setText("Status: Online")
         
     def incoming_message(self, message):
@@ -69,20 +66,24 @@ class ChatRosterWindow(QtGui.QDialog):
         self.chats[id] = ChatWindow(self.parent, id, self, first_message)
         self.chats[id].show()
 
-    def update_roster(self):
-        self.parent.xmpp.getRoster()
+    def trigger_roster_update(self):
+        self.parent.xmpp.get_roster()
+
+    def roster_update(self, roster):
         self.ui.lstRoster.clear()
         self.roster_names = {}
 
-        for id in self.parent.xmpp.roster:
-            if str(id) != self.parent.xmpp.jid and self.parent.xmpp.roster[id]['presence']:
-                if self.parent.xmpp.roster[id]['name']:
-                    self.roster_names[self.parent.xmpp.roster[id]['name']] = id
-                    self.ui.lstRoster.addItem(str(self.parent.xmpp.roster[id]['name']))
-                else:
-                    self.ui.lstRoster.addItem(str(id))
+        roster = self.parent.xmpp.client_roster
+
+        for id in roster:
+            if roster[id]['presence']:
+                print('online')
+            #   if roster[id]['name']:
+            #        self.roster_names[roster[id]['name']] = id
+             #       self.ui.lstRoster.addItem(str(roster[id]['name']))
+              #  else:
+               #     self.ui.lstRoster.addItem(str(id))
         self.roster_timer.start(6800)
 
     def close_chat(self, chat):
         del self.chats[str(chat)]
-        
